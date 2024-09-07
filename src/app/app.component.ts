@@ -1,7 +1,7 @@
-import { Component, contentChildren, DestroyRef, ElementRef, inject, QueryList, Signal, signal, ViewChildren, viewChildren } from '@angular/core';
+import { Component, contentChildren, DestroyRef, ElementRef, inject, QueryList, Signal, signal, viewChild, ViewChildren, viewChildren } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
-import { concatMap, fromEvent, merge, mergeMap, switchMap, takeUntil, tap } from 'rxjs';
+import { concatMap, filter, fromEvent, map, merge, mergeMap, switchMap, takeUntil, tap } from 'rxjs';
 import { CellComponent } from './components/cell/cell.component';
 import { Cell } from './models/cell.model';
 
@@ -17,24 +17,28 @@ export class AppComponent {
 
   public destroyRef = inject(DestroyRef);
 
-  public cellComponents = viewChildren(CellComponent, { read: ElementRef });
-  public cells$ = toObservable(this.cellComponents);
+  public gridComponent = viewChild.required('gridComponent', { read: ElementRef });
+
+  public grid$ = toObservable(this.gridComponent);
 
   public grid = this.buildEmptyGrid();
 
-  public foo$ = this.cells$.pipe(
-    switchMap((cells) => {
-      return merge(...cells.map((cell: ElementRef) => fromEvent(cell.nativeElement, 'click').pipe(
-        tap(() => this.changeCellState(cell))
-      )));
-    }),
-    takeUntilDestroyed(this.destroyRef)
+  private gridClick$ = this.grid$.pipe(
+    switchMap((grid) => fromEvent<PointerEvent>(grid.nativeElement, 'click')),
+    map(event => event.target),
+    filter(Boolean),
+    tap(target => this.changeCellState(target as HTMLElement)),
   ).subscribe();
 
-  private changeCellState(cell: ElementRef): void {
-    const index = this.cellComponents().indexOf(cell);
+  private cellComponents = viewChildren(CellComponent, { read: ElementRef });
 
-    if (index === -1) return;
+  private changeCellState(target: HTMLElement): void {
+
+    const cell = this.cellComponents().find(c => c.nativeElement === target.parentElement);
+
+    if (!cell) return;
+
+    const index = this.cellComponents().indexOf(cell);
 
     this.grid[index].state = this.grid[index].state === 'empty' ? 'filled' : 'empty';
   }

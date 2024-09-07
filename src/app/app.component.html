@@ -1,4 +1,4 @@
-<div class="grid">
+<div #gridComponent class="grid">
   @for (cell of grid; track $index;) {
   <app-cell #cell [data]="cell" />
   }
