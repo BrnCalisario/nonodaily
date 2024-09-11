@@ -1,10 +1,9 @@
 import { Component, contentChildren, DestroyRef, ElementRef, inject, QueryList, Signal, signal, viewChild, ViewChildren, viewChildren } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
-import { concatMap, filter, fromEvent, map, merge, mergeMap, switchMap, takeUntil, tap } from 'rxjs';
+import { concatMap, debounce, debounceTime, filter, fromEvent, map, merge, mergeMap, of, switchMap, takeUntil, tap } from 'rxjs';
 import { CellComponent } from './components/cell/cell.component';
 import { Cell } from './models/cell.model';
-
 
 @Component({
   selector: 'app-root',
@@ -15,6 +14,8 @@ import { Cell } from './models/cell.model';
 })
 export class AppComponent {
 
+  holding = signal(false);
+
   public destroyRef = inject(DestroyRef);
 
   public gridComponent = viewChild.required('gridComponent', { read: ElementRef });
@@ -24,23 +25,49 @@ export class AppComponent {
   public grid = this.buildEmptyGrid();
 
   private gridClick$ = this.grid$.pipe(
-    switchMap((grid) => fromEvent<PointerEvent>(grid.nativeElement, 'click')),
+    switchMap((grid) => fromEvent<PointerEvent>(grid.nativeElement, 'mousedown')),
     map(event => event.target),
     filter(Boolean),
     tap(target => this.changeCellState(target as HTMLElement)),
+  )
+
+  private mousedown$ = fromEvent(document, 'mousedown').pipe(
+    tap((event => event.preventDefault())),
+    debounceTime(50),
+    tap(() => this.holding.set(true))
+  ).subscribe();
+
+  private mouseup$ = fromEvent(document, 'mouseup').pipe(
+    tap((event => event.preventDefault())),
+    tap(() => this.holding.set(false))
   ).subscribe();
 
   private cellComponents = viewChildren(CellComponent, { read: ElementRef });
 
-  private changeCellState(target: HTMLElement): void {
+  private mouseenter$ = toObservable(this.cellComponents).pipe(
+    switchMap(elements => {
+      return merge(...elements.map(e => fromEvent<PointerEvent>(e.nativeElement, 'mouseenter'))).pipe(
+        filter(() => this.holding()),
+        tap((event) => this.changeCellState(event.target as HTMLElement))
+      )
+    })
+  )
 
-    const cell = this.cellComponents().find(c => c.nativeElement === target.parentElement);
+  foo$ = merge(this.gridClick$, this.mouseenter$).subscribe();
+
+  private changeCellState(target: HTMLElement, value?: "filled" | "empty" | "marked"): void {
+    const cell = this.cellComponents().find(c => c.nativeElement == target || c.nativeElement === target.parentElement);
 
     if (!cell) return;
 
     const index = this.cellComponents().indexOf(cell);
 
-    this.grid[index].state = this.grid[index].state === 'empty' ? 'filled' : 'empty';
+    if (!value) {
+      this.grid[index].state = this.grid[index].state === 'empty' ? 'filled' : 'empty';
+    } else {
+      this.grid[index].state = value;
+    }
+
   }
 
   private buildEmptyGrid(): Cell[] {

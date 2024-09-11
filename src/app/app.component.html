@@ -1,5 +1,47 @@
-<div #gridComponent class="grid">
-  @for (cell of grid; track $index;) {
-  <app-cell #cell [data]="cell" />
-  }
+<div>{{ holding() }}</div>
+
+<div class="game">
+  <div class="top-hint">
+    <div class="hint-row">
+      <div class="hint"></div>
+      <div class="hint"></div>
+      <div class="hint"></div>
+    </div>
+    <div class="hint-row">
+      <div class="hint"></div>
+      <div class="hint"></div>
+    </div>
+    <div class="hint-row"></div>
+    <div class="hint-row"></div>
+    <div class="hint-row">
+      <div class="hint"></div>
+      <div class="hint"></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <div class="left-hint">
+      <div class="hint-row">
+        <div class="hint"></div>
+        <div class="hint"></div>
+        <div class="hint"></div>
+      </div>
+      <div class="hint-row">
+        <div class="hint"></div>
+        <div class="hint"></div>
+      </div>
+      <div class="hint-row"></div>
+      <div class="hint-row"></div>
+      <div class="hint-row">
+        <div class="hint"></div>
+        <div class="hint"></div>
+      </div>
+    </div>
+
+    <div #gridComponent class="grid">
+      @for (item of this.grid; track $index) {
+      <app-cell #cell [data]="item" />
+      }
+    </div>
+  </div>
 </div>

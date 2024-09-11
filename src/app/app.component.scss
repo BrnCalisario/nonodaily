@@ -1,11 +1,135 @@
-.grid {
+// // .grid {
+// //   width: 500px;
+// //   height: 500px;
 
+// //   gap: 4px;
+
+// //   display: grid;
+// //   grid-template-columns: repeat(5, 100px);
+// //   grid-template-rows: repeat(5, 100px);
+// // }
+
+// // .game {
+// //   display: flex;
+// //   justify-content: center;
+// //   align-items: flex-end;
+// // }
+
+// // .left {
+// //   align-self: flex-end;
+// // }
+
+// // .left-hints {
+
+// //   display: flex;
+// //   flex-direction: column;
+// //   row-gap: 2px;
+// // }
+
+// // .right-hints {
+// //   display: flex;
+// //   flex-direction: row;
+// //   column-gap: 2px;
+
+// //   .hint {
+// //     display: flex;
+// //     justify-content: flex-end;
+// //     flex-direction: column;
+// //   }
+// // }
+
+// // .hint {
+
+// //   display: flex;
+// //   justify-content: flex-end;
+// //   column-gap: 4px;
+
+// //   .box {
+
+// //     display: flex;
+// //     align-items: center;
+// //     justify-content: center;
+
+// //     font-size: 4rem;
+
+// //     width: 100px;
+// //     height: 100px;
+// //     border: 1px solid lightgray;
+// //   }
+// // }
+
+.grid {
   width: 500px;
   height: 500px;
-
-  gap: 4px;
+  border: 1px solid black;
 
   display: grid;
+
   grid-template-columns: repeat(5, 1fr);
   grid-template-rows: repeat(5, 1fr);
+}
+
+.left-hint {
+  border: 1px solid black;
+  display: flex;
+  flex-direction: column;
+
+  min-width: 100px;
+
+  .hint-row {
+    display: flex;
+    justify-content: flex-end;
+    min-height: 100px;
+  }
+
+  .hint {
+    width: 100px;
+  }
+}
+
+.top-hint {
+  width: 500px;
+  min-height: 100px;
+  border: 1px solid black;
+
+  display: flex;
+
+  .hint-row {
+    min-width: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .hint {
+    width: 100px;
+    height: 100px;
+
+    &:first-child {
+      border: 1px solid red;
+      ;
+    }
+  }
+
+}
+
+.hint {
+  border: 1px solid blue;
+}
+
+.wrap {
+  display: flex;
+  gap: 20px;
+}
+
+.game {
+  width: fit-content;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-end;
+
+  gap: 20px;
 }
