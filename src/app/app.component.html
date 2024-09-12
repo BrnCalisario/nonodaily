@@ -1,41 +1,19 @@
 <div>{{ holding() }}</div>
 
-<div class="game">
+<div id="game">
   <div class="top-hint">
-    <div class="hint-row">
-      <div class="hint"></div>
-      <div class="hint"></div>
-      <div class="hint"></div>
-    </div>
-    <div class="hint-row">
-      <div class="hint"></div>
-      <div class="hint"></div>
-    </div>
+    @for (row of this.buildHints(this.WIDTH); track $index) {
     <div class="hint-row"></div>
-    <div class="hint-row"></div>
-    <div class="hint-row">
-      <div class="hint"></div>
-      <div class="hint"></div>
-    </div>
+    }
   </div>
 
   <div class="wrap">
     <div class="left-hint">
-      <div class="hint-row">
-        <div class="hint"></div>
-        <div class="hint"></div>
-        <div class="hint"></div>
-      </div>
-      <div class="hint-row">
-        <div class="hint"></div>
-        <div class="hint"></div>
-      </div>
+
+      @for (row of this.buildHints(this.HEIGHT); track $index) {
       <div class="hint-row"></div>
-      <div class="hint-row"></div>
-      <div class="hint-row">
-        <div class="hint"></div>
-        <div class="hint"></div>
-      </div>
+      }
+
     </div>
 
     <div #gridComponent class="grid">

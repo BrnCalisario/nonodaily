@@ -1,4 +1,4 @@
-import { Component, contentChildren, DestroyRef, ElementRef, inject, QueryList, Signal, signal, viewChild, ViewChildren, viewChildren } from '@angular/core';
+import { AfterViewInit, Component, contentChildren, DestroyRef, ElementRef, inject, QueryList, Signal, signal, viewChild, ViewChildren, viewChildren } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
 import { concatMap, debounce, debounceTime, filter, fromEvent, map, merge, mergeMap, of, switchMap, takeUntil, tap } from 'rxjs';
@@ -12,7 +12,11 @@ import { Cell } from './models/cell.model';
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
-export class AppComponent {
+export class AppComponent implements AfterViewInit {
+
+  public readonly WIDTH = 15;
+  public readonly HEIGHT = 15;
+  public readonly CELL_SIZE = 40;
 
   holding = signal(false);
 
@@ -33,7 +37,6 @@ export class AppComponent {
 
   private mousedown$ = fromEvent(document, 'mousedown').pipe(
     tap((event => event.preventDefault())),
-    debounceTime(50),
     tap(() => this.holding.set(true))
   ).subscribe();
 
@@ -51,7 +54,7 @@ export class AppComponent {
         tap((event) => this.changeCellState(event.target as HTMLElement))
       )
     })
-  )
+  );
 
   foo$ = merge(this.gridClick$, this.mouseenter$).subscribe();
 
@@ -70,9 +73,28 @@ export class AppComponent {
 
   }
 
+  public ngAfterViewInit(): void {
+    var game = document.getElementById("game");
+
+    if (!game) return;
+
+    game.style.setProperty('--cell-size', `${this.CELL_SIZE}px`);
+    game.style.setProperty('--rows', `${this.HEIGHT}`);
+    game.style.setProperty('--columns', `${this.WIDTH}`);
+
+  }
+
+  public buildHints(size: number): number[] {
+    return Array.from(Array(size)).map(() => {
+      return 0;
+    })
+  }
+
   private buildEmptyGrid(): Cell[] {
-    return Array.from(Array(25)).map(() => {
+    return Array.from(Array(this.WIDTH * this.HEIGHT)).map(() => {
       return { state: "empty" }
     });
   }
+
+
 }

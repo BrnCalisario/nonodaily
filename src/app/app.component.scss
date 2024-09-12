@@ -1,116 +1,69 @@
-// // .grid {
-// //   width: 500px;
-// //   height: 500px;
+#game {
+  width: fit-content;
 
-// //   gap: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 
-// //   display: grid;
-// //   grid-template-columns: repeat(5, 100px);
-// //   grid-template-rows: repeat(5, 100px);
-// // }
+  gap: 20px;
 
-// // .game {
-// //   display: flex;
-// //   justify-content: center;
-// //   align-items: flex-end;
-// // }
-
-// // .left {
-// //   align-self: flex-end;
-// // }
-
-// // .left-hints {
-
-// //   display: flex;
-// //   flex-direction: column;
-// //   row-gap: 2px;
-// // }
-
-// // .right-hints {
-// //   display: flex;
-// //   flex-direction: row;
-// //   column-gap: 2px;
-
-// //   .hint {
-// //     display: flex;
-// //     justify-content: flex-end;
-// //     flex-direction: column;
-// //   }
-// // }
-
-// // .hint {
-
-// //   display: flex;
-// //   justify-content: flex-end;
-// //   column-gap: 4px;
-
-// //   .box {
-
-// //     display: flex;
-// //     align-items: center;
-// //     justify-content: center;
-
-// //     font-size: 4rem;
-
-// //     width: 100px;
-// //     height: 100px;
-// //     border: 1px solid lightgray;
-// //   }
-// // }
+  --cell-size: 100px;
+  --rows: 5;
+  --columns: 5;
+}
 
 .grid {
-  width: 500px;
-  height: 500px;
+  width: calc(var(--cell-size) * var(--columns));
+  height: calc(var(--cell-size) * var(--rows));
+
   border: 1px solid black;
 
   display: grid;
 
-  grid-template-columns: repeat(5, 1fr);
-  grid-template-rows: repeat(5, 1fr);
+  grid-template-columns: repeat(var(--columns), var(--cell-size));
+  grid-template-rows: repeat(var(--rows), var(--cell-size));
+}
+
+.left-hint,
+.top-hint {
+  border: 1px solid black;
+  display: flex;
+}
+
+.hint-row {
+  display: flex;
+  justify-content: flex-end;
+  border: 1px solid red;
 }
 
 .left-hint {
-  border: 1px solid black;
-  display: flex;
-  flex-direction: column;
 
-  min-width: 100px;
+  display: grid;
 
-  .hint-row {
-    display: flex;
-    justify-content: flex-end;
-    min-height: 100px;
-  }
+  grid-template-rows: repeat(var(--rows), var(--cell-size));
+  width: var(--cell-size);
 
-  .hint {
-    width: 100px;
-  }
+  // .hint-row {
+  //   height: var(--cell-size);
+  // }
+
+  // .hint {
+  //   width: var(--cell-size);
+  // }
 }
 
 .top-hint {
-  width: 500px;
-  min-height: 100px;
-  border: 1px solid black;
 
-  display: flex;
+  display: grid;
+
+  width: calc(var(--cell-size) * var(--columns));
+  height: var(--cell-size);
+
+  grid-template-columns: repeat(var(--columns), var(--cell-size));
 
   .hint-row {
-    min-width: 100px;
-    display: flex;
     flex-direction: column;
-    justify-content: flex-end;
   }
-
-  .hint {
-    width: 100px;
-    height: 100px;
-
-    &:first-child {
-      border: 1px solid red;
-      ;
-    }
-  }
-
 }
 
 .hint {
@@ -119,17 +72,5 @@
 
 .wrap {
   display: flex;
-  gap: 20px;
-}
-
-.game {
-  width: fit-content;
-
-  display: flex;
-
-  flex-direction: column;
-
-  align-items: flex-end;
-
   gap: 20px;
 }
