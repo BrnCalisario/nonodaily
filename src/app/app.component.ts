@@ -14,9 +14,10 @@ import { Cell } from './models/cell.model';
 })
 export class AppComponent implements AfterViewInit {
 
-  public readonly WIDTH = 15;
-  public readonly HEIGHT = 15;
-  public readonly CELL_SIZE = 40;
+  public readonly WIDTH = 5;
+  public readonly HEIGHT = 5;
+
+  public readonly GRID_BOX = 500;
 
   holding = signal(false);
 
@@ -54,7 +55,7 @@ export class AppComponent implements AfterViewInit {
         tap((event) => this.changeCellState(event.target as HTMLElement))
       )
     })
-  );
+  )
 
   foo$ = merge(this.gridClick$, this.mouseenter$).subscribe();
 
@@ -78,7 +79,9 @@ export class AppComponent implements AfterViewInit {
 
     if (!game) return;
 
-    game.style.setProperty('--cell-size', `${this.CELL_SIZE}px`);
+    const cellSize = this.GRID_BOX / this.WIDTH;
+
+    game.style.setProperty('--cell-size', `${cellSize}px`);
     game.style.setProperty('--rows', `${this.HEIGHT}`);
     game.style.setProperty('--columns', `${this.WIDTH}`);
 
