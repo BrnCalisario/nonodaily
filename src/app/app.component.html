@@ -2,16 +2,24 @@
 
 <div id="game">
   <div class="top-hint">
-    @for (row of this.buildHints(this.WIDTH); track $index) {
-    <div class="hint-row"></div>
+    @for (row of heart.topHints; track $index) {
+    <div class="hint-row">
+      @for (hint of row; track $index) {
+      <div class="hint">{{ hint }}</div>
+      }
+    </div>
     }
   </div>
 
   <div class="wrap">
     <div class="left-hint">
 
-      @for (row of this.buildHints(this.HEIGHT); track $index) {
-      <div class="hint-row"></div>
+      @for (row of heart.leftHints; track $index) {
+      <div class="hint-row">
+        @for(hint of row; track $index) {
+        <div class="hint">{{ hint }}</div>
+        }
+      </div>
       }
 
     </div>

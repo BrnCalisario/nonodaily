@@ -4,6 +4,7 @@ import { RouterOutlet } from '@angular/router';
 import { concatMap, debounce, debounceTime, filter, fromEvent, map, merge, mergeMap, of, switchMap, takeUntil, tap } from 'rxjs';
 import { CellComponent } from './components/cell/cell.component';
 import { Cell } from './models/cell.model';
+import { heart } from './data/heart';
 
 @Component({
   selector: 'app-root',
@@ -14,10 +15,13 @@ import { Cell } from './models/cell.model';
 })
 export class AppComponent implements AfterViewInit {
 
+  public heart = heart;
+
   public readonly WIDTH = 5;
   public readonly HEIGHT = 5;
 
-  public readonly GRID_BOX = 500;
+  public readonly GRID_BOX = 400;
+
 
   holding = signal(false);
 
@@ -87,9 +91,12 @@ export class AppComponent implements AfterViewInit {
 
   }
 
-  public buildHints(size: number): number[] {
-    return Array.from(Array(size)).map(() => {
-      return 0;
+  public buildHints(size: number): number[][] {
+    return Array.from(Array(5)).map((_, i) => {
+
+      const foo = Array.from(Array(i + 1)).map(() => size - i)
+
+      return foo;
     })
   }
 
@@ -97,7 +104,5 @@ export class AppComponent implements AfterViewInit {
     return Array.from(Array(this.WIDTH * this.HEIGHT)).map(() => {
       return { state: "empty" }
     });
-  }
-
-
+  };
 }
