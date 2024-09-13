@@ -1,3 +1,5 @@
+export type CellState = "filled" | "empty" | "marked";
+
 export interface Cell {
-  state: "filled" | "empty" | "marked";
+  state: CellState;
 }

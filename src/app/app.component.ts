@@ -1,10 +1,10 @@
-import { AfterViewInit, Component, contentChildren, DestroyRef, ElementRef, inject, QueryList, Signal, signal, viewChild, ViewChildren, viewChildren } from '@angular/core';
-import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { AfterViewInit, Component, DestroyRef, ElementRef, inject, signal, viewChild, viewChildren } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { RouterOutlet } from '@angular/router';
-import { concatMap, debounce, debounceTime, filter, fromEvent, map, merge, mergeMap, of, switchMap, takeUntil, tap } from 'rxjs';
+import { combineLatest, filter, fromEvent, map, merge, switchMap, tap } from 'rxjs';
 import { CellComponent } from './components/cell/cell.component';
-import { Cell } from './models/cell.model';
 import { heart } from './data/heart';
+import { Cell, CellState } from './models/cell.model';
 
 @Component({
   selector: 'app-root',
@@ -19,11 +19,11 @@ export class AppComponent implements AfterViewInit {
 
   public readonly WIDTH = 5;
   public readonly HEIGHT = 5;
-
   public readonly GRID_BOX = 400;
 
-
   holding = signal(false);
+
+  pencil = signal<CellState | null>(null);
 
   public destroyRef = inject(DestroyRef);
 
@@ -37,33 +37,43 @@ export class AppComponent implements AfterViewInit {
     switchMap((grid) => fromEvent<PointerEvent>(grid.nativeElement, 'mousedown')),
     map(event => event.target),
     filter(Boolean),
-    tap(target => this.changeCellState(target as HTMLElement)),
+    tap(target => this.changeCellState(target as HTMLElement, this.pencil())),
   )
 
   private mousedown$ = fromEvent(document, 'mousedown').pipe(
     tap((event => event.preventDefault())),
+    tap((event) => {
+      const { classList } = event.target as HTMLElement;
+      const value = classList.contains('filled') ? 'empty' : 'filled';
+      this.pencil.set(value)
+    }),
     tap(() => this.holding.set(true))
-  ).subscribe();
+  );
 
   private mouseup$ = fromEvent(document, 'mouseup').pipe(
     tap((event => event.preventDefault())),
+    tap(() => this.pencil.set(null)),
     tap(() => this.holding.set(false))
-  ).subscribe();
-
+  );
   private cellComponents = viewChildren(CellComponent, { read: ElementRef });
 
   private mouseenter$ = toObservable(this.cellComponents).pipe(
     switchMap(elements => {
       return merge(...elements.map(e => fromEvent<PointerEvent>(e.nativeElement, 'mouseenter'))).pipe(
         filter(() => this.holding()),
-        tap((event) => this.changeCellState(event.target as HTMLElement))
+        tap((event) => this.changeCellState(event.target as HTMLElement, this.pencil()))
       )
     })
   )
 
   foo$ = merge(this.gridClick$, this.mouseenter$).subscribe();
 
-  private changeCellState(target: HTMLElement, value?: "filled" | "empty" | "marked"): void {
+  constructor() {
+    this.mousedown$.subscribe();
+    this.mouseup$.subscribe();
+  }
+
+  private changeCellState(target: HTMLElement, value?: CellState | null): void {
     const cell = this.cellComponents().find(c => c.nativeElement == target || c.nativeElement === target.parentElement);
 
     if (!cell) return;
@@ -75,7 +85,6 @@ export class AppComponent implements AfterViewInit {
     } else {
       this.grid[index].state = value;
     }
-
   }
 
   public ngAfterViewInit(): void {
@@ -88,7 +97,6 @@ export class AppComponent implements AfterViewInit {
     game.style.setProperty('--cell-size', `${cellSize}px`);
     game.style.setProperty('--rows', `${this.HEIGHT}`);
     game.style.setProperty('--columns', `${this.WIDTH}`);
-
   }
 
   public buildHints(size: number): number[][] {
