@@ -30,21 +30,37 @@ export class AppComponent implements AfterViewInit {
   public gridComponent = viewChild.required('gridComponent', { read: ElementRef });
 
   public grid$ = toObservable(this.gridComponent);
-
   public grid = this.buildEmptyGrid();
 
   private gridClick$ = this.grid$.pipe(
     switchMap((grid) => fromEvent<PointerEvent>(grid.nativeElement, 'mousedown')),
-    map(event => event.target),
     filter(Boolean),
-    tap(target => this.changeCellState(target as HTMLElement, this.pencil())),
+    tap(({ target, button }) => {
+
+      if (!this.pencil()) {
+        const value = button == 0 ? 'filled' : "marked";
+        this.pencil.set(value);
+      }
+
+      this.changeCellState(target as HTMLElement, this.pencil())
+    }),
   )
 
-  private mousedown$ = fromEvent(document, 'mousedown').pipe(
+  private preventContextMenu = this.grid$.pipe(
+    switchMap(({ nativeElement }) => fromEvent<PointerEvent>(nativeElement, 'contextmenu')),
+    tap((event) => event.preventDefault())
+  ).subscribe();
+
+  private mousedown$ = fromEvent<MouseEvent>(document, 'mousedown').pipe(
     tap((event => event.preventDefault())),
-    tap((event) => {
-      const { classList } = event.target as HTMLElement;
-      const value = classList.contains('filled') ? 'empty' : 'filled';
+    tap(({ button, target }) => {
+
+      const state = button === 0 ? 'filled' : 'marked'
+
+      const { classList } = target as HTMLElement;
+
+      const value = classList.contains(state) ? 'empty' : state;
+
       this.pencil.set(value)
     }),
     tap(() => this.holding.set(true))
@@ -57,6 +73,8 @@ export class AppComponent implements AfterViewInit {
   );
   private cellComponents = viewChildren(CellComponent, { read: ElementRef });
 
+  private cells$ = viewChildren(CellComponent);
+
   private mouseenter$ = toObservable(this.cellComponents).pipe(
     switchMap(elements => {
       return merge(...elements.map(e => fromEvent<PointerEvent>(e.nativeElement, 'mouseenter'))).pipe(
@@ -66,14 +84,14 @@ export class AppComponent implements AfterViewInit {
     })
   )
 
-  foo$ = merge(this.gridClick$, this.mouseenter$).subscribe();
-
   constructor() {
     this.mousedown$.subscribe();
     this.mouseup$.subscribe();
+
+    merge(this.gridClick$, this.mouseenter$).subscribe();
   }
 
-  private changeCellState(target: HTMLElement, value?: CellState | null): void {
+  private changeCellState(target: HTMLElement, value: CellState | null): void {
     const cell = this.cellComponents().find(c => c.nativeElement == target || c.nativeElement === target.parentElement);
 
     if (!cell) return;
@@ -81,10 +99,16 @@ export class AppComponent implements AfterViewInit {
     const index = this.cellComponents().indexOf(cell);
 
     if (!value) {
-      this.grid[index].state = this.grid[index].state === 'empty' ? 'filled' : 'empty';
-    } else {
-      this.grid[index].state = value;
-    }
+      let value: CellState = this.grid[index].state !== 'empty' ? 'empty' : 'filled';
+      this.paintCell(index, value);
+      return;
+    };
+
+    this.paintCell(index, value);
+  }
+
+  private paintCell(index: number, value: CellState) {
+    this.grid[index].state = value;
   }
 
   public ngAfterViewInit(): void {
