@@ -85,8 +85,10 @@ export class AppComponent implements AfterViewInit {
 
   private handleGridMouseDown({ target, button }: MouseEvent): void {
     const id = Number((target as HTMLElement).id);
-    const oldValue = this.grid[id].state;
-    const newState = this.getNewState(button, oldValue);
+
+    const previewState = this.grid[id].state;
+    const newState = this.getNewState(button, previewState);
+
     this.pencil.set(newState);
     this.paintCell(id, newState);
   }

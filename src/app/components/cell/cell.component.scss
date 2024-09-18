@@ -9,6 +9,9 @@
   &.empty {}
 
   &.marked {
-    background-color: red;
+    background-image: url("/assets/images/close.png");
+    background-size: 80%;
+    background-repeat: no-repeat;
+    background-position: center;
   }
 }
