@@ -13,4 +13,7 @@ export class CellComponent {
 
   @Input({ required: true })
   data!: Cell;
+
+  @Input({ required: true })
+  index!: number;
 }

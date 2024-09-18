@@ -27,7 +27,7 @@
 
     <div #gridComponent class="grid">
       @for (item of this.grid; track $index; let idx = $index) {
-      <app-cell [id]="idx" #cell [data]="item" />
+      <app-cell data-id="{{idx}}" [index]="idx" #cell [data]="item" />
       }
     </div>
   </div>

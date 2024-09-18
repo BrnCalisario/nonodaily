@@ -1,10 +1,10 @@
-import { AfterViewInit, Component, DestroyRef, ElementRef, inject, signal, viewChild, viewChildren } from '@angular/core';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { AfterViewInit, Component, DestroyRef, ElementRef, inject, signal, TemplateRef, viewChild, viewChildren } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { combineLatest, filter, fromEvent, map, merge, switchMap, tap } from 'rxjs';
 import { CellComponent } from './components/cell/cell.component';
 import { heart } from './data/heart';
 import { Cell, CellState } from './models/cell.model';
+import { filter, fromEvent, merge, switchMap, tap } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-root',
@@ -20,95 +20,76 @@ export class AppComponent implements AfterViewInit {
   public readonly WIDTH = 5;
   public readonly HEIGHT = 5;
   public readonly GRID_BOX = 400;
+  private readonly destroyRef = inject(DestroyRef);
 
-  holding = signal(false);
-
-  pencil = signal<CellState | null>(null);
-
-  public destroyRef = inject(DestroyRef);
-
-  public gridComponent = viewChild.required('gridComponent', { read: ElementRef });
-
-  public grid$ = toObservable(this.gridComponent);
   public grid = this.buildEmptyGrid();
 
-  private gridClick$ = this.grid$.pipe(
-    switchMap((grid) => fromEvent<PointerEvent>(grid.nativeElement, 'mousedown')),
-    filter(Boolean),
-    tap(({ target, button }) => {
+  protected holding = signal(false);
+  protected pencil = signal<CellState | null>(null);
 
-      if (!this.pencil()) {
-        const value = button == 0 ? 'filled' : "marked";
-        this.pencil.set(value);
-      }
+  private _grid = viewChild.required<ElementRef>('gridComponent');
+  private grid$ = toObservable(this._grid);
 
-      this.changeCellState(target as HTMLElement, this.pencil())
-    }),
-  )
+  private _cells = viewChildren('cell', { read: ElementRef });
+  private cells$ = toObservable(this._cells);
+
+  private mousedown$ = fromEvent<MouseEvent>(document, 'mousedown').pipe(
+    tap(() => this.holding.set(true)),
+    tap((event) => event.preventDefault()),
+  );
+
+  private mouseup$ = fromEvent<MouseEvent>(document, 'mouseup').pipe(
+    tap(() => this.holding.set(false)),
+    tap((event) => event.preventDefault()),
+  );
 
   private preventContextMenu = this.grid$.pipe(
     switchMap(({ nativeElement }) => fromEvent<PointerEvent>(nativeElement, 'contextmenu')),
     tap((event) => event.preventDefault())
-  ).subscribe();
-
-  private mousedown$ = fromEvent<MouseEvent>(document, 'mousedown').pipe(
-    tap((event => event.preventDefault())),
-    tap(({ button, target }) => {
-
-      const state = button === 0 ? 'filled' : 'marked'
-
-      const { classList } = target as HTMLElement;
-
-      const value = classList.contains(state) ? 'empty' : state;
-
-      this.pencil.set(value)
-    }),
-    tap(() => this.holding.set(true))
   );
 
-  private mouseup$ = fromEvent(document, 'mouseup').pipe(
-    tap((event => event.preventDefault())),
-    tap(() => this.pencil.set(null)),
-    tap(() => this.holding.set(false))
+  private gridMouseDown$ = this.grid$.pipe(
+    switchMap(({ nativeElement }) => fromEvent<MouseEvent>(nativeElement, 'mousedown')),
+    tap(({ target, button }) => {
+      const id = Number((target as HTMLElement).id);
+
+      const oldValue = this.grid[id].state;
+
+      const value = button === 0 ? 'filled' : 'marked';
+
+      const state = oldValue === value ? 'empty' : value;
+
+      this.pencil.set(state);
+      this.paintCell(id, state);
+    })
   );
-  private cellComponents = viewChildren(CellComponent, { read: ElementRef });
 
-  private cells$ = viewChildren(CellComponent);
-
-  private mouseenter$ = toObservable(this.cellComponents).pipe(
+  private cellMouseEnter$ = this.cells$.pipe(
     switchMap(elements => {
-      return merge(...elements.map(e => fromEvent<PointerEvent>(e.nativeElement, 'mouseenter'))).pipe(
+      return merge(...elements.map(e => fromEvent<MouseEvent>(e.nativeElement, 'mouseenter'))).pipe(
         filter(() => this.holding()),
-        tap((event) => this.changeCellState(event.target as HTMLElement, this.pencil()))
+        tap(({ target }) => {
+          const id = Number((target as HTMLElement).id);
+          this.paintCell(id, this.pencil()!)
+        })
       )
     })
-  )
+  );
+
+  private paintCell(index: number, value: CellState) {
+    const state = this.grid[index].state;
+
+    if (state == value) return;
+
+    this.grid[index].state = value;
+  }
 
   constructor() {
     this.mousedown$.subscribe();
     this.mouseup$.subscribe();
-
-    merge(this.gridClick$, this.mouseenter$).subscribe();
-  }
-
-  private changeCellState(target: HTMLElement, value: CellState | null): void {
-    const cell = this.cellComponents().find(c => c.nativeElement == target || c.nativeElement === target.parentElement);
-
-    if (!cell) return;
-
-    const index = this.cellComponents().indexOf(cell);
-
-    if (!value) {
-      let value: CellState = this.grid[index].state !== 'empty' ? 'empty' : 'filled';
-      this.paintCell(index, value);
-      return;
-    };
-
-    this.paintCell(index, value);
-  }
-
-  private paintCell(index: number, value: CellState) {
-    this.grid[index].state = value;
+    this.gridMouseDown$.subscribe();
+    this.cellMouseEnter$.subscribe();
+    this.preventContextMenu.subscribe();
   }
 
   public ngAfterViewInit(): void {
