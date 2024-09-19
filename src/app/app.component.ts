@@ -104,9 +104,20 @@ export class AppComponent implements AfterViewInit {
   }
 
   private paintCell(index: number, value: CellState) {
-    if (this.grid[index].state !== value) {
-      this.grid[index].state = value;
-    }
+    const state = this.grid[index].state;
+
+    if (state == value) return;
+
+    this.grid[index].state = value;
+
+    const row = Math.floor(index / this.WIDTH);
+    const column = index % this.HEIGHT;
+
+    const rowClusters = this.findRowClusters(row);
+    console.log("row", rowClusters)
+
+    const columnClusters = this.findColumnClusters(column);
+    console.log("column", columnClusters);
   }
 
   private setGridStyles(): void {
@@ -126,5 +137,46 @@ export class AppComponent implements AfterViewInit {
 
   private buildEmptyGrid(): Cell[] {
     return Array.from({ length: this.WIDTH * this.HEIGHT }, () => ({ state: "empty" }));
+  }
+
+  private findRowClusters(row: number): number[] {
+    const start = this.WIDTH * row
+    const step = 1;
+    const limit = (row * this.WIDTH) + this.WIDTH - 1;
+
+    return this.findClusters(start, step, limit);
+  }
+
+  private findColumnClusters(column: number): number[] {
+    const start = column;
+    const step = this.WIDTH;
+    const limit = (this.WIDTH * this.HEIGHT) - (this.WIDTH - column);
+
+    return this.findClusters(start, step, limit);
+  }
+
+  private findClusters(start: number, step: number, limit: number): number[] {
+    let cluster = 0;
+    let clusters = [];
+
+    for (let i = start; i <= limit; i += step) {
+
+      let condition = this.grid[i].state == 'filled';
+
+      if (condition) {
+        cluster++;
+      }
+
+      if (!condition && cluster > 0) {
+        clusters.push(cluster);
+        cluster = 0;
+      }
+
+      if (i == limit && cluster > 0) {
+        clusters.push(cluster);
+      }
+    }
+
+    return clusters;
   }
 }
