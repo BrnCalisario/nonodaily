@@ -1,21 +1,25 @@
 import { AfterViewInit, Component, DestroyRef, ElementRef, inject, signal, TemplateRef, viewChild, viewChildren } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CellComponent } from './components/cell/cell.component';
-import { heart } from './data/heart';
+import { heart, Hint } from './data/heart';
 import { Cell, CellState } from './models/cell.model';
 import { filter, fromEvent, merge, switchMap, tap } from 'rxjs';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, CellComponent],
+  imports: [RouterOutlet, CellComponent, CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent implements AfterViewInit {
 
   public heart = heart;
+
+  public leftHints: Hint[][];
+  public topHints: Hint[][];
 
   public readonly WIDTH = 5;
   public readonly HEIGHT = 5;
@@ -35,6 +39,9 @@ export class AppComponent implements AfterViewInit {
 
   constructor() {
     this.initializeMouseEvents();
+
+    this.leftHints = heart.leftHints.map(l => l.map(value => ({ ...new Hint(), value })));
+    this.topHints = heart.topHints.map(t => t.map(value => ({ ...new Hint(), value })));
   }
 
   public ngAfterViewInit(): void {
@@ -114,10 +121,39 @@ export class AppComponent implements AfterViewInit {
     const column = index % this.HEIGHT;
 
     const rowClusters = this.findRowClusters(row);
-    console.log("row", rowClusters)
 
     const columnClusters = this.findColumnClusters(column);
-    console.log("column", columnClusters);
+
+    const rowCompleted = this.compareHints(rowClusters, this.heart.leftHints[row]);
+    this.leftHints[row].forEach(o => o.complete = rowCompleted);
+
+    const columnCompleted = this.compareHints(columnClusters, this.heart.topHints[column]);
+    this.topHints[column].forEach(o => o.complete = columnCompleted);
+
+    if (rowCompleted) {
+      let start = Math.floor(row * this.WIDTH);
+
+      for (let i = start; i < start + this.WIDTH; i++) {
+
+        const cell = this.grid[i].state;
+
+        if (cell == 'filled') continue;
+
+        this.grid[i].state = 'marked';
+      }
+    }
+
+    if (columnCompleted) {
+      let start = column;
+
+      for (let j = start; j <= (this.WIDTH * this.HEIGHT) - (this.WIDTH - column); j += this.WIDTH) {
+        const cell = this.grid[j].state;
+
+        if (cell == 'filled') continue;
+
+        this.grid[j].state = 'marked';
+      }
+    }
   }
 
   private setGridStyles(): void {
@@ -178,5 +214,9 @@ export class AppComponent implements AfterViewInit {
     }
 
     return clusters;
+  }
+
+  public compareHints(a: number[], b: number[]) {
+    return JSON.stringify(a) === JSON.stringify(b);
   }
 }

@@ -16,3 +16,8 @@ export const heart = {
     [1]
   ],
 };
+
+export class Hint {
+  value: number = 0;
+  complete: boolean = false;
+}

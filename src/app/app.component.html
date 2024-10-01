@@ -3,10 +3,10 @@
 
 <div id="game">
   <div class="top-hint">
-    @for (row of heart.topHints; track $index) {
+    @for (row of topHints; track $index) {
     <div class="hint-row">
       @for (hint of row; track $index) {
-      <div class="hint">{{ hint }}</div>
+      <div class="hint" [ngClass]="hint.complete ? 'inactive' : 'active'">{{ hint.value }}</div>
       }
     </div>
     }
@@ -15,10 +15,10 @@
   <div class="wrap">
     <div class="left-hint">
 
-      @for (row of heart.leftHints; track $index) {
+      @for (row of leftHints; track $index) {
       <div class="hint-row">
         @for(hint of row; track $index) {
-        <div class="hint">{{ hint }}</div>
+        <div class="hint" [ngClass]="hint.complete ? 'inactive' : 'active'">{{ hint.value }}</div>
         }
       </div>
       }

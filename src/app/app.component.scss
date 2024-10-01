@@ -65,13 +65,15 @@
 
 .hint {
 
-  // outline: 1px solid blue;
-
   display: flex;
   align-items: center;
   justify-content: center;
 
   font-size: 2rem;
+
+  &.inactive {
+    color: rgb(150, 150, 150);
+  }
 }
 
 .wrap {
